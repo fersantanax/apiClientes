@@ -3,7 +3,6 @@ package br.com.cotiinformatica.repositories;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -15,8 +14,7 @@ public class ClienteRepository {
 	public void insert(Cliente cliente) throws Exception {
 		Connection connection = ConnectionFactory.getConnection();
 		PreparedStatement statement = connection
-				.prepareStatement("insert into cliente(id, nome, email,telefone, plano_id) values(?,?,?,?,?)");
-
+				.prepareStatement("insert into cliente(id, nome, email, telefone, plano_id) values(?,?,?,?,?)");
 		statement.setObject(1, cliente.getId());
 		statement.setString(2, cliente.getNome());
 		statement.setString(3, cliente.getEmail());
@@ -29,7 +27,7 @@ public class ClienteRepository {
 	public void update(Cliente cliente) throws Exception {
 		Connection connection = ConnectionFactory.getConnection();
 		PreparedStatement statement = connection
-				.prepareStatement("update cliente set nome=?, email=?,telefone=?, plano_id=? where id=?");
+				.prepareStatement("update cliente set nome=?, email=?, telefone=?, plano_id=? where id=?");
 		statement.setString(1, cliente.getNome());
 		statement.setString(2, cliente.getEmail());
 		statement.setString(3, cliente.getTelefone());
@@ -41,28 +39,38 @@ public class ClienteRepository {
 
 	public void delete(Cliente cliente) throws Exception {
 		Connection connection = ConnectionFactory.getConnection();
-		PreparedStatement statement = connection.prepareStatement("delete from cliente where id=?");
+		PreparedStatement statement = connection.prepareStatement
+
+		("delete from cliente where id=?");
 		statement.setObject(1, cliente.getId());
 		statement.execute();
 		connection.close();
 	}
 
-	public List<Cliente> findAll() throws Exception {
+	public Cliente findById(UUID id) throws Exception {
 		Connection connection = ConnectionFactory.getConnection();
-		PreparedStatement statement = connection.prepareStatement("select * from cliente order by nome");
+		PreparedStatement statement = connection
+				.prepareStatement("select c.id, c.nome, c.email, c.telefone, p.id as idplano,p.nome as nomeplano "
+						+ "from cliente c inner join plano p on p.id = c.plano_id " + "where c.id = ?");
+		statement.setObject(1, id);
 		ResultSet resultSet = statement.executeQuery();
-		List<Cliente> lista = new ArrayList<Cliente>();
-		while (resultSet.next()) {
-			Cliente cliente = new Cliente();
+		Cliente cliente = null;
+		if (resultSet.next()) {
+			cliente = new Cliente();
 			cliente.setPlano(new Plano());
 			cliente.setId(UUID.fromString(resultSet.getString("id")));
 			cliente.setNome(resultSet.getString("nome"));
 			cliente.setEmail(resultSet.getString("email"));
 			cliente.setTelefone(resultSet.getString("telefone"));
-			cliente.getPlano().setId(UUID.fromString(resultSet.getString("plano_id")));
-			lista.add(cliente);
+			cliente.getPlano().setId(UUID.fromString(resultSet.getString("idplano")));
+			cliente.getPlano().setNome(resultSet.getString("nomeplano"));
 		}
 		connection.close();
-		return lista;
+		return cliente;
+	}
+
+	public List<Cliente> findAll() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
